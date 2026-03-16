@@ -28,11 +28,11 @@ def extract_date(maybe_dt: str) -> tuple[int, int, int] | None:
     return date
 
 
-def income_handler() -> str:
+def income_handler(_amount: float, _income_date: str) -> str:
     return OP_SUCCESS_MSG
 
 
-def cost_handler() -> str:
+def cost_handler(_category_name: str, _amount: float, _income_date: str) -> str:
     return OP_SUCCESS_MSG
 
 
@@ -40,7 +40,7 @@ def stats_handler(report_date: str) -> str:
     return f"Statistic for {report_date}"
 
 
-def get_amount(amount: str) -> int:
+def get_amount(amount: str) -> float:
     amount = amount.replace(",", ".")
     return float(amount)
 
@@ -49,7 +49,7 @@ def is_correct_amount(amount: str) -> bool:
     return not get_amount(amount) <= 0
 
 
-def add_income(incomes, parts):
+def add_income(incomes: list[tuple[float, tuple[int, int, int]]], parts: list[str]) -> str:
     right_length = 3
     if len(parts) != right_length:
         return UNKNOWN_COMMAND_MSG
@@ -57,13 +57,16 @@ def add_income(incomes, parts):
     date = parts[2]
     if not is_correct_amount(amount):
         return NONPOSITIVE_VALUE_MSG
-    if not extract_date(date):
+
+    parsed_date = extract_date(date)
+    if not parsed_date:
         return INCORRECT_DATE_MSG
-    incomes.append((get_amount(amount), extract_date(date)))
-    return income_handler()
+
+    incomes.append((get_amount(amount), parsed_date))
+    return income_handler(get_amount(amount), date)
 
 
-def add_cost(costs, parts):
+def add_cost(costs: list[tuple[str, float, tuple[int, int, int]]], parts: list[str]) -> str:
     right_length = 4
     if len(parts) != right_length:
         return UNKNOWN_COMMAND_MSG
@@ -72,13 +75,16 @@ def add_cost(costs, parts):
     date = parts[3]
     if not is_correct_amount(amount):
         return NONPOSITIVE_VALUE_MSG
-    if not extract_date(date):
+
+    parsed_date = extract_date(date)
+    if not parsed_date:
         return INCORRECT_DATE_MSG
-    costs.append((category, get_amount(amount), extract_date(date)))
-    return cost_handler()
+
+    costs.append((category, get_amount(amount), parsed_date))
+    return cost_handler(category, get_amount(amount), date)
 
 
-def less_or_equal(date_first, date_second) -> bool:
+def less_or_equal(date_first: tuple[int, int, int], date_second: tuple[int, int, int]) -> bool:
     if date_first[2] < date_second[2]:
         return True
     if date_first[2] == date_second[2]:
@@ -89,8 +95,10 @@ def less_or_equal(date_first, date_second) -> bool:
     return False
 
 
-def calculate_income(incomes, start_date, end_date) -> float:
-    total_income = 0
+def calculate_income(
+    incomes: list[tuple[float, tuple[int, int, int]]], start_date: tuple[int, int, int], end_date: tuple[int, int, int]
+) -> float:
+    total_income = 0.0
     for i in range(len(incomes)):
         income = incomes[i][0]
         date = incomes[i][1]
@@ -99,8 +107,13 @@ def calculate_income(incomes, start_date, end_date) -> float:
     return total_income
 
 
-def calculate_cost(costs, details, start_date, end_date) -> float:
-    total_cost = 0
+def calculate_cost(
+    costs: list[tuple[str, float, tuple[int, int, int]]],
+    details: dict[str, float],
+    start_date: tuple[int, int, int],
+    end_date: tuple[int, int, int],
+) -> float:
+    total_cost = 0.0
     for i in range(len(costs)):
         category = costs[i][0]
         cost = costs[i][1]
@@ -114,8 +127,12 @@ def calculate_cost(costs, details, start_date, end_date) -> float:
     return total_cost
 
 
-def calculate_capital(incomes, costs, end_date) -> float:
-    capital = 0
+def calculate_capital(
+    incomes: list[tuple[float, tuple[int, int, int]]],
+    costs: list[tuple[str, float, tuple[int, int, int]]],
+    end_date: tuple[int, int, int],
+) -> float:
+    capital = 0.0
     for i in range(len(incomes)):
         income = incomes[i][0]
         date = incomes[i][1]
@@ -129,18 +146,28 @@ def calculate_capital(incomes, costs, end_date) -> float:
     return capital
 
 
-def calculate_stat(incomes, costs, parts):
+def calculate_stat(
+    incomes: list[tuple[float, tuple[int, int, int]]],
+    costs: list[tuple[str, float, tuple[int, int, int]]],
+    parts: list[str],
+) -> None:
     right_length = 2
     if len(parts) != right_length:
         print(UNKNOWN_COMMAND_MSG)
         return
-    if not extract_date(parts[1]):
+    parsed_date = extract_date(parts[1])
+    if not parsed_date:
         print(INCORRECT_DATE_MSG)
         return
+
     stats_handler(parts[1])
     start_date = extract_date("01" + parts[1][2:])
-    end_date = extract_date(parts[1])
-    details = {}
+    end_date = parsed_date
+
+    if not start_date or not end_date:
+        return
+
+    details: dict[str, float] = {}
     capital = 0
     total_income = calculate_income(incomes, start_date, end_date)
     total_cost = calculate_cost(costs, details, start_date, end_date)
@@ -160,8 +187,8 @@ def calculate_stat(incomes, costs, parts):
 
 
 def main() -> None:
-    incomes = []
-    costs = []
+    incomes: list[tuple[float, tuple[int, int, int]]] = []
+    costs: list[tuple[str, float, tuple[int, int, int]]] = []
     with open(0) as file:
         for line in file:
             parts = line.split()
