@@ -28,11 +28,11 @@ def extract_date(maybe_dt: str) -> tuple[int, int, int] | None:
     return date
 
 
-def income_handler(amount: float, income_date: str) -> str:
+def income_handler() -> str:
     return OP_SUCCESS_MSG
 
 
-def cost_handler(category_name: str, amount: float, income_date: str) -> str:
+def cost_handler() -> str:
     return OP_SUCCESS_MSG
 
 
@@ -60,7 +60,7 @@ def add_income(incomes, parts):
     if not extract_date(date):
         return INCORRECT_DATE_MSG
     incomes.append((get_amount(amount), extract_date(date)))
-    return income_handler(get_amount(amount), date)
+    return income_handler()
 
 
 def add_cost(costs, parts):
@@ -75,7 +75,7 @@ def add_cost(costs, parts):
     if not extract_date(date):
         return INCORRECT_DATE_MSG
     costs.append((category, get_amount(amount), extract_date(date)))
-    return cost_handler(category, get_amount(amount), date)
+    return cost_handler()
 
 
 def less_or_equal(date_first, date_second) -> bool:
