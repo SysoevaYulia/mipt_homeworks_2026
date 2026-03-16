@@ -16,74 +16,91 @@ def is_leap_year(year: int) -> bool:
 def extract_date(maybe_dt: str) -> tuple[int, int, int] | None:
     date = int(maybe_dt[:2]), int(maybe_dt[3:5]), int(maybe_dt[6:])
     days = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31]
+    months_amount = 12
     if date[2] < 0:
         return None
     if is_leap_year(date[2]):
-        days[1] = 29
-    if not (date[1] >= 1 and date[1] <= 12):
-        return None 
+        days[1] += 1
+    if not (date[1] >= 1 and date[1] <= months_amount):
+        return None
     if not (date[0] >= 1 and date[0] <= days[date[1] - 1]):
         return None
     return date
 
 
 def income_handler(amount: float, income_date: str) -> str:
-    return f"{OP_SUCCESS_MSG} {amount=} {income_date=}"
+    return OP_SUCCESS_MSG
 
 
 def cost_handler(category_name: str, amount: float, income_date: str) -> str:
-    return f"{OP_SUCCESS_MSG} {category_name} {amount=} {income_date=}"
+    return OP_SUCCESS_MSG
+
 
 def stats_handler(report_date: str) -> str:
     return f"Statistic for {report_date}"
 
+
 def get_amount(amount: str) -> int:
-    amount = amount.replace(',', '.')
-    amount = float(amount)
-    return amount
+    amount = amount.replace(",", ".")
+    return float(amount)
 
 
 def is_correct_amount(amount: str) -> bool:
-    if get_amount(amount) <= 0:
-        return False 
-    return True
+    return not get_amount(amount) <= 0
 
 
-def add_income(incomes, amount: str, date: str):
+def add_income(incomes, parts):
+    right_length = 3
+    if len(parts) != right_length:
+        return UNKNOWN_COMMAND_MSG
+    amount = parts[1]
+    date = parts[2]
+    if not is_correct_amount(amount):
+        return NONPOSITIVE_VALUE_MSG
+    if not extract_date(date):
+        return INCORRECT_DATE_MSG
     incomes.append((get_amount(amount), extract_date(date)))
+    return income_handler(get_amount(amount), date)
 
 
 def add_cost(costs, parts):
-    costs.append((parts[1], get_amount(parts[2]), extract_date(parts[3])))
+    right_length = 4
+    if len(parts) != right_length:
+        return UNKNOWN_COMMAND_MSG
+    category = parts[1]
+    amount = parts[2]
+    date = parts[3]
+    if not is_correct_amount(amount):
+        return NONPOSITIVE_VALUE_MSG
+    if not extract_date(date):
+        return INCORRECT_DATE_MSG
+    costs.append((category, get_amount(amount), extract_date(date)))
+    return cost_handler(category, get_amount(amount), date)
 
 
 def less_or_equal(date_first, date_second) -> bool:
     if date_first[2] < date_second[2]:
         return True
-    elif date_first[2] == date_second[2]:
+    if date_first[2] == date_second[2]:
         if date_first[1] < date_second[1]:
             return True
-        elif date_first[1] == date_second[1]:
-            if date_first[0] <= date_second[0]:
-                return True
+        if date_first[1] == date_second[1] and date_first[0] <= date_second[0]:
+            return True
     return False
 
 
-def calculate_stat(incomes, costs, end_date: str):
+def calculate_income(incomes, start_date, end_date) -> float:
     total_income = 0
-    total_cost = 0
-    start_date = extract_date("01" + end_date[2:])
-    end_date = extract_date(end_date)
-    details = {}
-    capital = 0
     for i in range(len(incomes)):
         income = incomes[i][0]
         date = incomes[i][1]
         if less_or_equal(start_date, date) and less_or_equal(date, end_date):
             total_income += income
-        if less_or_equal(date, end_date):
-            capital += income
+    return total_income
 
+
+def calculate_cost(costs, details, start_date, end_date) -> float:
+    total_cost = 0
     for i in range(len(costs)):
         category = costs[i][0]
         cost = costs[i][1]
@@ -94,9 +111,39 @@ def calculate_stat(incomes, costs, end_date: str):
                 details[category] += cost
             else:
                 details[category] = cost
+    return total_cost
+
+
+def calculate_capital(incomes, costs, end_date) -> float:
+    capital = 0
+    for i in range(len(incomes)):
+        income = incomes[i][0]
+        date = incomes[i][1]
+        if less_or_equal(date, end_date):
+            capital += income
+    for i in range(len(costs)):
+        cost = costs[i][1]
+        date = costs[i][2]
         if less_or_equal(date, end_date):
             capital -= cost
+    return capital
 
+
+def calculate_stat(incomes, costs, parts):
+    right_length = 2
+    if len(parts) != right_length:
+        print(UNKNOWN_COMMAND_MSG)
+        return
+    if not extract_date(parts[1]):
+        print(INCORRECT_DATE_MSG)
+        return
+    stats_handler(parts[1])
+    start_date = extract_date("01" + parts[1][2:])
+    end_date = extract_date(parts[1])
+    details = {}
+    capital = 0
+    total_income = calculate_income(incomes, start_date, end_date)
+    total_cost = calculate_cost(costs, details, start_date, end_date)
     print(f"Total capital: {capital:.2f} rubles")
     if total_income >= total_cost:
         print(f"In this month the profit was {(total_income - total_cost):.2f} rubles")
@@ -115,45 +162,19 @@ def calculate_stat(incomes, costs, end_date: str):
 def main() -> None:
     incomes = []
     costs = []
-    for line in open(0):
-        parts = line.split()
-        if not parts:
-            continue
-        if parts[0] == "income":
-            if len(parts) != 3:
+    with open(0) as file:
+        for line in file:
+            parts = line.split()
+            if not parts:
+                continue
+            if parts[0] == "income":
+                print(add_income(incomes, parts))
+            elif parts[0] == "cost":
+                print(add_cost(costs, parts))
+            elif parts[0] == "stats":
+                calculate_stat(incomes, costs, parts)
+            else:
                 print(UNKNOWN_COMMAND_MSG)
-                continue 
-            if not is_correct_amount(parts[1]):
-                print(NONPOSITIVE_VALUE_MSG)
-                continue
-            if not extract_date(parts[2]):
-                print(INCORRECT_DATE_MSG)
-                continue
-            add_income(incomes, parts[1], parts[2])
-            income_handler(get_amount(parts[1]), parts[2])
-        elif parts[0] == "cost":
-            if len(parts) != 4:
-                print(UNKNOWN_COMMAND_MSG)
-                continue 
-            if not is_correct_amount(parts[2]):
-                print(NONPOSITIVE_VALUE_MSG)
-                continue
-            if not extract_date(parts[3]):
-                print(INCORRECT_DATE_MSG)
-                continue
-            add_cost(costs, parts)
-            cost_handler(parts[1], get_amount(parts[2]), parts[3])
-        elif parts[0] == "stats":
-            if len(parts) != 2:
-                print(UNKNOWN_COMMAND_MSG)
-                continue 
-            if not extract_date(parts[1]):
-                print(INCORRECT_DATE_MSG)
-                continue
-            stats_handler(parts[1])
-            calculate_stat(incomes, costs, parts[1])
-        else:
-            print(UNKNOWN_COMMAND_MSG)
 
 
 if __name__ == "__main__":
