@@ -35,12 +35,12 @@ def is_leap_year(year: int) -> bool:
 
 
 def extract_date(maybe_dt: str) -> DateTuple | None:
-    check_date = maybe_dt.replace("-", "")
-    if not check_date.isdigit():
+    maybe_dt = maybe_dt.replace("-", "")
+    if not maybe_dt.isdigit():
         return None
     day = int(maybe_dt[:2])
-    month = int(maybe_dt[3:5])
-    year = int(maybe_dt[6:])
+    month = int(maybe_dt[2:4])
+    year = int(maybe_dt[4:])
     months_amount = 12
     days = [
         31,
@@ -124,8 +124,7 @@ def cost_handler(category_name: str, amount: float, cost_date: str) -> str:
 def cost_categories_handler() -> str:
     lines: list[str] = []
     for cat, subs in EXPENSE_CATEGORIES.items():
-        for sub in subs:
-            lines.append(f"{cat}::{sub}")
+        lines.extend(f"{cat}::{sub}" for sub in subs)
     return "\n".join(lines)
 
 
