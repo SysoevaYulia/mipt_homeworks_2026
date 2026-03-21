@@ -218,7 +218,7 @@ def print_stat_result(
         count += 1
 
 
-def calculate_stat(start_date: tuple[int, int, int], end_date: tuple[int, int, int]) -> None:
+def calculate_stat(start_date: DateTuple, end_date: DateTuple) -> None:
     details: dict[str, float] = {}
     capital = calculate_capital(end_date)
     total_income = calculate_income(start_date, end_date)
@@ -226,7 +226,7 @@ def calculate_stat(start_date: tuple[int, int, int], end_date: tuple[int, int, i
     print_stat_result(capital, total_income, total_cost, details)
 
 
-def get_stat(stat_date: str) -> None:
+def print_stat(stat_date: str) -> None:
     end_date = extract_date(stat_date)
     if not end_date:
         print(INCORRECT_DATE_MSG)
@@ -251,7 +251,7 @@ def process_command(parts: list[str]) -> None:
         amount_cost = get_amount(parts[2])
         print(cost_handler(parts[1], amount_cost, parts[3]))
     elif cmd == "stats":
-        get_stat(parts[1])
+        print_stat(parts[1])
     else:
         print(UNKNOWN_COMMAND_MSG)
 
