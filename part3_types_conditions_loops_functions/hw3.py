@@ -232,7 +232,7 @@ def print_stat(stat_date: str) -> None:
         print(INCORRECT_DATE_MSG)
         return
     stats_handler(stat_date)
-    start_date = extract_date("01" + stat_date[2:])
+    start_date = (1, end_date[1], end_date[2])
     if not start_date or not end_date:
         return
     calculate_stat(start_date, end_date)
