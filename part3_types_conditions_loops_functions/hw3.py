@@ -35,12 +35,11 @@ def is_leap_year(year: int) -> bool:
 
 
 def extract_date(maybe_dt: str) -> DateTuple | None:
-    maybe_dt = maybe_dt.replace("-", "")
-    if not maybe_dt.isdigit():
+    if not maybe_dt.replace("-", "").isdigit():
         return None
     day = int(maybe_dt[:2])
-    month = int(maybe_dt[2:4])
-    year = int(maybe_dt[4:])
+    month = int(maybe_dt[3:5])
+    year = int(maybe_dt[6:])
     months_amount = 12
     days = [
         31,
@@ -91,6 +90,14 @@ def income_handler(amount: float, income_date: str) -> str:
     return OP_SUCCESS_MSG
 
 
+def is_category_exists(category_name: str) -> bool:
+    for cat, value_tuple in EXPENSE_CATEGORIES.items():
+        for sub in value_tuple:
+            if category_name == f"{cat}::{sub}":
+                return True
+    return False
+
+
 def cost_handler(category_name: str, amount: float, cost_date: str) -> str:
     parsed_date = extract_date(cost_date)
     if not parsed_date:
@@ -99,15 +106,7 @@ def cost_handler(category_name: str, amount: float, cost_date: str) -> str:
     if amount < 0:
         financial_transactions_storage.append({})
         return NONPOSITIVE_VALUE_MSG
-
-    category_exists = False
-    for cat, value_tuple in EXPENSE_CATEGORIES.items():
-        for sub in value_tuple:
-            if category_name == f"{cat}::{sub}":
-                category_exists = True
-                break
-        if category_exists:
-            break
+    category_exists = is_category_exists(category_name)
     if not category_exists:
         financial_transactions_storage.append({})
         return NOT_EXISTS_CATEGORY
@@ -172,9 +171,8 @@ def calculate_cost(
         if not less_or_equal(date, end_date):
             continue
         amount = transaction[KEY_AMOUNT]
-        category = transaction[KEY_CATEGORY]
         total_cost += amount
-        details[category] = details.get(category, 0) + amount
+        details[transaction[KEY_CATEGORY]] = details.get(transaction[KEY_CATEGORY], 0) + amount
     return total_cost
 
 
@@ -217,19 +215,18 @@ def print_stat_result(
 
 
 def calculate_stat(stat_date: str) -> None:
-    parsed_date = extract_date(stat_date)
-    if not parsed_date:
+    stat_date = extract_date(stat_date)
+    if not stat_date:
         print(INCORRECT_DATE_MSG)
         return
     stats_handler(stat_date)
     start_date = extract_date(f"01{stat_date[2:]}")
-    end_date = parsed_date
-    if not start_date or not end_date:
+    if not start_date or not stat_date:
         return
     details: dict[str, float] = {}
-    capital = calculate_capital(end_date)
-    total_income = calculate_income(start_date, end_date)
-    total_cost = calculate_cost(details, start_date, end_date)
+    capital = calculate_capital(stat_date)
+    total_income = calculate_income(start_date, stat_date)
+    total_cost = calculate_cost(details, start_date, stat_date)
     print_stat_result(capital, total_income, total_cost, details)
 
 
