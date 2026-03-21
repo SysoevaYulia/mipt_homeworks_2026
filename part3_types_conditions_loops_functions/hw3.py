@@ -155,6 +155,12 @@ def calculate_income(start_date: DateTuple, end_date: DateTuple) -> float:
     return total_income
 
 
+def check_date(start_date: DateTuple | Any, date: DateTuple | Any, end_date: DateTuple | Any) -> bool:
+    if not date or not start_date or not end_date:
+        return False
+    return less_or_equal(start_date, date) and less_or_equal(date, end_date)
+
+
 def calculate_cost(
     details: dict[str, float],
     start_date: DateTuple,
@@ -166,13 +172,11 @@ def calculate_cost(
         if len(transaction) != right_length:
             continue
         date = transaction.get(KEY_DATE)
-        if not date or not less_or_equal(start_date, date):
+        if not check_date(start_date, date, end_date):
             continue
-        if not less_or_equal(date, end_date):
-            continue
-        amount = transaction[KEY_AMOUNT]
-        total_cost += amount
-        details[transaction[KEY_CATEGORY]] = details.get(transaction[KEY_CATEGORY], 0) + amount
+        category = transaction[KEY_CATEGORY]
+        total_cost += transaction[KEY_AMOUNT]
+        details[category] = details.get(category, 0) + transaction[KEY_AMOUNT]
     return total_cost
 
 
@@ -214,20 +218,24 @@ def print_stat_result(
         count += 1
 
 
-def calculate_stat(stat_date: str) -> None:
-    stat_date = extract_date(stat_date)
-    if not stat_date:
+def calculate_stat(start_date: tuple[int, int, int], end_date: tuple[int, int, int]) -> None:
+    details: dict[str, float] = {}
+    capital = calculate_capital(end_date)
+    total_income = calculate_income(start_date, end_date)
+    total_cost = calculate_cost(details, start_date, end_date)
+    print_stat_result(capital, total_income, total_cost, details)
+
+
+def get_stat(stat_date: str) -> None:
+    end_date = extract_date(stat_date)
+    if not end_date:
         print(INCORRECT_DATE_MSG)
         return
     stats_handler(stat_date)
-    start_date = extract_date(f"01{stat_date[2:]}")
-    if not start_date or not stat_date:
+    start_date = extract_date("01" + stat_date[2:])
+    if not start_date or not end_date:
         return
-    details: dict[str, float] = {}
-    capital = calculate_capital(stat_date)
-    total_income = calculate_income(start_date, stat_date)
-    total_cost = calculate_cost(details, start_date, stat_date)
-    print_stat_result(capital, total_income, total_cost, details)
+    calculate_stat(start_date, end_date)
 
 
 def process_command(parts: list[str]) -> None:
@@ -243,7 +251,7 @@ def process_command(parts: list[str]) -> None:
         amount_cost = get_amount(parts[2])
         print(cost_handler(parts[1], amount_cost, parts[3]))
     elif cmd == "stats":
-        calculate_stat(parts[1])
+        get_stat(parts[1])
     else:
         print(UNKNOWN_COMMAND_MSG)
 
