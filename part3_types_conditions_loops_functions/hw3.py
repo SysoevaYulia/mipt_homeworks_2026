@@ -18,7 +18,7 @@ EXPENSE_CATEGORIES = {
     "Clothing": ("Outerwear", "Casual", "Shoes", "Accessories"),
     "Education": ("Courses", "Books", "Tutors"),
     "Communications": ("Mobile", "Internet", "Subscriptions"),
-    "Other": (),
+    "Other": ("Music"),
 }
 
 
@@ -33,7 +33,7 @@ def is_leap_year(year: int) -> bool:
 
 
 def extract_date(maybe_dt: str) -> tuple[int, int, int] | None:
-    check_date = maybe_dt.replace('-', '')
+    check_date = maybe_dt.replace("-", "")
     for symb in check_date:
         if symb not in "0123456789":
             return None
@@ -67,7 +67,7 @@ def income_handler(amount: float, income_date: str) -> str:
     if amount < 0:
         financial_transactions_storage.append({})
         return NONPOSITIVE_VALUE_MSG
-        
+
     financial_transactions_storage.append({"amount": amount, "date": extract_date(income_date)})
     return OP_SUCCESS_MSG
 
@@ -80,9 +80,9 @@ def cost_handler(category_name: str, amount: float, cost_date: str) -> str:
         financial_transactions_storage.append({})
         return NONPOSITIVE_VALUE_MSG
     category_exists = False
-    for cat in EXPENSE_CATEGORIES.keys():
-        for sub in EXPENSE_CATEGORIES[cat]:
-            if category_name == cat + "::" + sub:
+    for cat, value_tuple in EXPENSE_CATEGORIES.items():
+        for sub in value_tuple:
+            if category_name == f"{cat}::{sub}":
                 category_exists = True
                 break
     if not category_exists:
