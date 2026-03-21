@@ -125,7 +125,7 @@ def cost_categories_handler() -> str:
     lines: list[str] = []
     for cat, subs in EXPENSE_CATEGORIES.items():
         for sub in subs:
-            lines.extend(f"{cat}::{sub}")
+            lines.append(f"{cat}::{sub}")
     return "\n".join(lines)
 
 
