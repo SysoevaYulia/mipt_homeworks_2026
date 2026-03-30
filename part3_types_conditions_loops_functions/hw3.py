@@ -120,11 +120,11 @@ def cost_handler(category_name: str, amount: float, cost_date: str) -> str:
     return OP_SUCCESS_MSG
 
 
-def cost_categories_handler() -> None:
+def cost_categories_handler() -> str:
     lines: list[str] = []
     for cat, subs in EXPENSE_CATEGORIES.items():
         lines.extend(f"{cat}::{sub}" for sub in subs)
-    print("\n".join(lines))
+    return "\n".join(lines)
 
 
 def stats_handler(report_date: str) -> str:
@@ -241,7 +241,7 @@ def print_stat(stat_date: str) -> None:
 def process_command(parts: list[str]) -> None:
     cmd_full = " ".join(parts)
     if cmd_full == "cost categories":
-        cost_categories_handler()
+        print(cost_categories_handler())
         return
     cmd = parts[0]
     if cmd == "income":
