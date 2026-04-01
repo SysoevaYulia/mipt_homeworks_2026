@@ -259,11 +259,10 @@ def process_command(parts: list[str]) -> None:
 
 def main() -> None:
     # читаем пользовательский ввод
-    with open(0) as file:
-        for line in file:
-            parts = line.split()
-            if parts:
-                process_command(parts)
+    line = input()
+    parts = line.split()
+    if parts:
+        process_command(parts)
 
 
 if __name__ == "__main__":
