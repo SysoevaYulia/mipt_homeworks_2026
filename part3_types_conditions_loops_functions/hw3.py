@@ -13,6 +13,8 @@ KEY_DATE = "date"
 KEY_CATEGORY = "category"
 DateTuple = tuple[int, int, int]
 
+MONTH_AMOUNT = 12
+
 EXPENSE_CATEGORIES = {
     "Food": ("Supermarket", "Restaurants", "FastFood", "Coffee", "Delivery"),
     "Transport": ("Taxi", "Public transport", "Gas", "Car service"),
@@ -40,7 +42,6 @@ def extract_date(maybe_dt: str) -> DateTuple | None:
     day = int(maybe_dt[:2])
     month = int(maybe_dt[3:5])
     year = int(maybe_dt[6:])
-    months_amount = 12
     days = [
         31,
         28,
@@ -59,7 +60,7 @@ def extract_date(maybe_dt: str) -> DateTuple | None:
         return None
     if is_leap_year(year):
         days[1] += 1
-    if not (1 <= month <= months_amount):
+    if not (1 <= month <= MONTH_AMOUNT):
         return None
     if not (1 <= day <= days[month - 1]):
         return None
@@ -257,6 +258,7 @@ def process_command(parts: list[str]) -> None:
 
 
 def main() -> None:
+    # читаем пользовательский ввод
     with open(0) as file:
         for line in file:
             parts = line.split()
