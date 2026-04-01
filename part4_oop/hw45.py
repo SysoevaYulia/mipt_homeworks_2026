@@ -22,8 +22,7 @@ class DictStorage(Storage[K, V]):
         return key in self._data
 
     def remove(self, key: K) -> None:
-        if key in self._data:
-            del self._data[key]
+        self._data.pop(key, None)
 
     def clear(self) -> None:
         self._data.clear()
@@ -109,8 +108,7 @@ class LFUPolicy(Policy[K]):
         return key_to_evict
 
     def remove_key(self, key: K) -> None:
-        if key in self._key_counter:
-            del self._key_counter[key]
+        self._key_counter.pop(key, None)
 
     def clear(self) -> None:
         self._key_counter.clear()
