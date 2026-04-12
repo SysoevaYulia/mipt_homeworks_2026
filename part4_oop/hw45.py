@@ -97,7 +97,8 @@ class LFUPolicy(Policy[K]):
         if len(self._key_counter) <= self.capacity:
             return None
 
-        return min(self._order[: self.capacity], key=lambda k: self._key_counter[k])
+        candidates = self._order[: self.capacity]
+        return min(candidates, key=lambda k: self._key_counter[k])
 
     def remove_key(self, key: K) -> None:
         self._key_counter.pop(key, None)
