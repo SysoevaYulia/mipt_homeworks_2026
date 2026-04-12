@@ -1,6 +1,6 @@
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, TypeVar
+from typing import Any, Self, TypeVar
 
 from part4_oop.interfaces import Cache, HasCache, Policy, Storage
 
@@ -97,15 +97,7 @@ class LFUPolicy(Policy[K]):
         if len(self._key_counter) <= self.capacity:
             return None
 
-        key_to_evict = self._order[0]
-        min_freq = self._key_counter[self._order[0]]
-        for i in range(self.capacity):
-            key = self._order[i]
-            if self._key_counter[key] < min_freq:
-                min_freq = self._key_counter[key]
-                key_to_evict = key
-
-        return key_to_evict
+        return min(self._order[: self.capacity], key=lambda k: self._key_counter[k])
 
     def remove_key(self, key: K) -> None:
         self._key_counter.pop(key, None)
@@ -157,9 +149,9 @@ class CachedProperty[V]:
         self._func = func
         self._name = func.__name__
 
-    def __get__(self, instance: HasCache[Any, V] | None, owner: type) -> V:
+    def __get__(self, instance: HasCache[Any, V] | None, owner: type) -> V | Self:
         if instance is None:
-            return self  # type: ignore[return-value]
+            return self
 
         cache = instance.cache
         key = self._name
