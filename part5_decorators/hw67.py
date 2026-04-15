@@ -48,6 +48,21 @@ class CircuitBreaker:
         if errors:
             raise ExceptionGroup(VALIDATIONS_FAILED, errors)
 
+    def __call__(self, func: CallableWithMeta[P, R_co]) -> CallableWithMeta[P, R_co]:
+        @wraps(func)
+        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R_co:
+            self.if_blocked(func)
+            try:
+                result = func(*args, **kwargs)
+            except Exception as ex:
+                self.try_to_create_break(ex, func)
+                raise
+            else:
+                self.fail_count = 0
+                return result
+
+        return wrapper
+
     def if_blocked(self, func: CallableWithMeta[P, R_co]) -> None:
         now = datetime.now(UTC)
         func_name = f"{func.__module__}.{func.__name__}"
@@ -65,21 +80,6 @@ class CircuitBreaker:
             if self.fail_count >= self.critical_count:
                 self.blocked_until = blocked_time + timedelta(seconds=self.time_to_recover)
                 raise BreakerError(func_name, blocked_time) from ex
-
-    def __call__(self, func: CallableWithMeta[P, R_co]) -> CallableWithMeta[P, R_co]:
-        @wraps(func)
-        def wrapper(*args: P.args, **kwargs: P.kwargs) -> R_co:
-            self.if_blocked(func)
-            try:
-                result = func(*args, **kwargs)
-                self.fail_count = 0
-            except Exception as ex:
-                self.try_to_create_break(ex, func)
-                raise
-            else:
-                return result
-
-        return wrapper
 
 
 circuit_breaker = CircuitBreaker(5, 30, Exception)
