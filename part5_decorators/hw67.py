@@ -48,30 +48,33 @@ class CircuitBreaker:
         if errors:
             raise ExceptionGroup(VALIDATIONS_FAILED, errors)
 
-    def create_break(self, ex: Exception, func: CallableWithMeta[P, R_co]) -> None:
-        self.fail_count += 1
-        blocked_time = datetime.now(UTC)
+    def if_blocked(self, func: CallableWithMeta[P, R_co]) -> None:
+        now = datetime.now(UTC)
         func_name = f"{func.__module__}.{func.__name__}"
-        if self.fail_count >= self.critical_count:
-            self.blocked_until = blocked_time + timedelta(seconds=self.time_to_recover)
-            raise BreakerError(func_name, blocked_time) from ex
+        if self.blocked_until is not None:
+            if now < self.blocked_until:
+                raise BreakerError(func_name, now)
+            self.blocked_until = None
+            self.fail_count = 0
+
+    def try_to_create_break(self, ex: Exception, func: CallableWithMeta[P, R_co]) -> None:
+        if isinstance(ex, self.triggers_on):
+            self.fail_count += 1
+            blocked_time = datetime.now(UTC)
+            func_name = f"{func.__module__}.{func.__name__}"
+            if self.fail_count >= self.critical_count:
+                self.blocked_until = blocked_time + timedelta(seconds=self.time_to_recover)
+                raise BreakerError(func_name, blocked_time) from ex
 
     def __call__(self, func: CallableWithMeta[P, R_co]) -> CallableWithMeta[P, R_co]:
         @wraps(func)
         def wrapper(*args: P.args, **kwargs: P.kwargs) -> R_co:
-            now = datetime.now(UTC)
-            func_name = f"{func.__module__}.{func.__name__}"
-            if self.blocked_until is not None:
-                if now < self.blocked_until:
-                    raise BreakerError(func_name, now)
-                self.blocked_until = None
-                self.fail_count = 0
+            self.if_blocked(func)
             try:
                 result = func(*args, **kwargs)
                 self.fail_count = 0
             except Exception as ex:
-                if isinstance(ex, self.triggers_on):
-                    self.create_break(ex, func)
+                self.try_to_create_break(ex, func)
                 raise
             else:
                 return result
