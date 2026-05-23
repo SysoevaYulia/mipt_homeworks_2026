@@ -1,13 +1,13 @@
 import sys
 import os
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 sys.path.insert(0, os.path.abspath('src'))
 
-from main import get_initial_messages, clear_console, print_welcome
+from main import get_initial_messages, clear_console, print_welcome  # type: ignore
 
 
-def test_get_initial_messages():
+def test_get_initial_messages() -> None:
     config_with_sys = {'system_prompt': 'You are helpful'}
     msgs = get_initial_messages(config_with_sys)
     assert len(msgs) == 1
@@ -19,12 +19,12 @@ def test_get_initial_messages():
 
 
 @patch('os.system')
-def test_clear_console(mock_system):
+def test_clear_console(mock_system: MagicMock) -> None:
     clear_console()
     mock_system.assert_called_once()
 
 
 @patch('builtins.print')
-def test_print_welcome(mock_print):
+def test_print_welcome(mock_print: MagicMock) -> None:
     print_welcome()
     assert mock_print.call_count == 2

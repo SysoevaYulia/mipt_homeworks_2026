@@ -60,7 +60,10 @@ def main() -> None:
         messages.append({'role': 'user', 'content': processed_input})
         messages = truncate_context(messages, config['limit_message'], config['limit_chars'])
 
-        assistant_reply = process_chat_streaming(ai, messages)
+        try:
+            assistant_reply = process_chat_streaming(ai, messages)
+        except KeyboardInterrupt as e:
+            assistant_reply = str(e) if e.args else ''
 
         if assistant_reply is not None:
             if assistant_reply:

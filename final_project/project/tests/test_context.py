@@ -1,7 +1,7 @@
-from src.context_mgr import truncate_context
+from src.context_mgr import truncate_context  # type: ignore
 
 
-def test_truncate_by_message_count():
+def test_truncate_by_message_count() -> None:
     messages = [
         {'role': 'system', 'content': 'You are a bot'},
         {'role': 'user', 'content': 'msg1'},
@@ -17,7 +17,7 @@ def test_truncate_by_message_count():
     assert result[2]['content'] == 'msg3'
 
 
-def test_truncate_by_char_count_remove_full_message():
+def test_truncate_by_char_count_remove_full_message() -> None:
     messages = [
         {'role': 'user', 'content': '1234567890'},
         {'role': 'assistant', 'content': '12345'},
@@ -29,7 +29,7 @@ def test_truncate_by_char_count_remove_full_message():
     assert result[0]['content'] == '2345'
 
 
-def test_truncate_by_char_count_partial_trim():
+def test_truncate_by_char_count_partial_trim() -> None:
     messages = [
         {'role': 'user', 'content': 'Hello world'},
     ]
@@ -40,12 +40,12 @@ def test_truncate_by_char_count_partial_trim():
     assert result[0]['content'] == 'world'
 
 
-def test_truncate_empty_messages():
+def test_truncate_empty_messages() -> None:
     result = truncate_context([], limit_message=10, limit_chars=100)
     assert result == []
 
 
-def test_truncate_only_system_prompt():
+def test_truncate_only_system_prompt() -> None:
     messages = [{'role': 'system', 'content': 'Very long system prompt ' * 100}]
     result = truncate_context(messages, limit_message=0, limit_chars=10)
 
@@ -53,7 +53,7 @@ def test_truncate_only_system_prompt():
     assert result[0]['role'] == 'system'
 
 
-def test_truncate_exact_limit():
+def test_truncate_exact_limit() -> None:
     messages = [{'role': 'user', 'content': '12345'}]
     result = truncate_context(messages, limit_message=10, limit_chars=5)
 

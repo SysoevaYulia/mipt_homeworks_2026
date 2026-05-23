@@ -16,17 +16,17 @@ def process_chat_streaming(ai: AIAssistant, messages: list[dict[str, str]]) -> s
 
     try:
         response_generator = ai.generate_streaming_response(messages)
-        try:
-            for chunk in response_generator:
-                text_chunk = chunk.choices[0].delta.content
-                if text_chunk is not None:
-                    print(text_chunk, end='', flush=True)
-                    assistant_reply += text_chunk
-        except KeyboardInterrupt:
-            print('\n[The generation was interrupted by the user]')
-
+        for chunk in response_generator:
+            text_chunk = chunk.choices[0].delta.content
+            if text_chunk is not None:
+                print(text_chunk, end='', flush=True)
+                assistant_reply += text_chunk
         print()
         return assistant_reply
+
+    except KeyboardInterrupt:
+        print('\n[The generation was interrupted by the user]')
+        raise KeyboardInterrupt(assistant_reply)
 
     except Exception as e:
         print(f'\nError accessing the API: {e}')
@@ -65,7 +65,11 @@ def handle_file_chunk_mode(ai: AIAssistant, user_input: str, config: dict[str, A
             full_prompt = f'{prompt}\n\nFragment text:\n{chunk_text}'
             chunk_messages.append({'role': 'user', 'content': full_prompt})
 
-            process_chat_streaming(ai, chunk_messages)
+            try:
+                process_chat_streaming(ai, chunk_messages)
+            except KeyboardInterrupt:
+                print('\n[Chunk processing aborted by user]')
+                break
 
             if not auto_yes:
                 try:

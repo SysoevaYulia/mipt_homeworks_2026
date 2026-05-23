@@ -1,8 +1,9 @@
-from unittest.mock import patch
-from src.file_mgr import process_files_in_text, chunk_file_generator
+from pathlib import Path
+from unittest.mock import patch, MagicMock
+from src.file_mgr import process_files_in_text, chunk_file_generator  # type: ignore
 
 
-def test_process_files_success(tmp_path):
+def test_process_files_success(tmp_path: Path) -> None:
     test_file = tmp_path / 'test.txt'
     test_file.write_text('Secret Data', encoding='utf-8')
 
@@ -15,7 +16,7 @@ def test_process_files_success(tmp_path):
     assert '@::' not in processed_text
 
 
-def test_process_files_not_found():
+def test_process_files_not_found() -> None:
     input_text = 'Read this: @::/fake/path/to/nothing.txt::'
 
     processed_text, error = process_files_in_text(input_text)
@@ -25,7 +26,7 @@ def test_process_files_not_found():
     assert 'The file was not found' in error
 
 
-def test_chunk_file_generator_by_len(tmp_path):
+def test_chunk_file_generator_by_len(tmp_path: Path) -> None:
     test_file = tmp_path / 'book.txt'
     test_file.write_text('1234567890', encoding='utf-8')
 
@@ -41,7 +42,9 @@ def test_chunk_file_generator_by_len(tmp_path):
 @patch('os.path.exists')
 @patch('os.path.isfile')
 @patch('os.path.getsize')
-def test_process_files_too_large(mock_getsize, mock_isfile, mock_exists):
+def test_process_files_too_large(
+    mock_getsize: MagicMock, mock_isfile: MagicMock, mock_exists: MagicMock
+) -> None:
     mock_exists.return_value = True
     mock_isfile.return_value = True
     mock_getsize.return_value = 6 * 1024 * 1024
@@ -55,7 +58,7 @@ def test_process_files_too_large(mock_getsize, mock_isfile, mock_exists):
 
 @patch('os.path.exists')
 @patch('os.path.isfile')
-def test_process_files_is_directory(mock_isfile, mock_exists):
+def test_process_files_is_directory(mock_isfile: MagicMock, mock_exists: MagicMock) -> None:
     mock_exists.return_value = True
     mock_isfile.return_value = False
 
@@ -66,7 +69,7 @@ def test_process_files_is_directory(mock_isfile, mock_exists):
     assert 'This path is not a file' in error
 
 
-def test_chunk_file_generator_by_paragraph(tmp_path):
+def test_chunk_file_generator_by_paragraph(tmp_path: Path) -> None:
     test_file = tmp_path / 'book.txt'
     content = 'Абзац 1\nАбзац 2\nАбзац 3'
     test_file.write_text(content, encoding='utf-8')
@@ -82,7 +85,9 @@ def test_chunk_file_generator_by_paragraph(tmp_path):
 @patch('os.path.isfile', return_value=True)
 @patch('os.path.getsize', return_value=100)
 @patch('builtins.open')
-def test_process_files_unicode_error(mock_open, mock_getsize, mock_isfile, mock_exists):
+def test_process_files_unicode_error(
+    mock_open: MagicMock, mock_getsize: MagicMock, mock_isfile: MagicMock, mock_exists: MagicMock
+) -> None:
     mock_open.side_effect = UnicodeDecodeError('utf-8', b'', 0, 1, 'reason')
 
     processed_text, error = process_files_in_text('Check @::image.png::')
@@ -95,7 +100,9 @@ def test_process_files_unicode_error(mock_open, mock_getsize, mock_isfile, mock_
 @patch('os.path.isfile', return_value=True)
 @patch('os.path.getsize', return_value=100)
 @patch('builtins.open')
-def test_process_files_generic_error(mock_open, mock_getsize, mock_isfile, mock_exists):
+def test_process_files_generic_error(
+    mock_open: MagicMock, mock_getsize: MagicMock, mock_isfile: MagicMock, mock_exists: MagicMock
+) -> None:
     mock_open.side_effect = Exception('Disk failure')
 
     processed_text, error = process_files_in_text('Check @::file.txt::')

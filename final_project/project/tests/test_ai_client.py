@@ -1,9 +1,9 @@
 from unittest.mock import patch, MagicMock
-from src.ai_client import AIAssistant
+from src.ai_client import AIAssistant  # type: ignore
 
 
 @patch('src.ai_client.OpenAI')
-def test_generate_streaming_response(mock_openai_class):
+def test_generate_streaming_response(mock_openai_class: MagicMock) -> None:
     mock_client = MagicMock()
     mock_openai_class.return_value = mock_client
 

@@ -1,11 +1,12 @@
 import pytest
-from unittest.mock import patch
-from src.config import load_config
+from typing import Any
+from unittest.mock import patch, MagicMock
+from src.config import load_config  # type: ignore
 
 
 @patch('os.environ.get')
 @patch('os.path.exists')
-def test_load_config_missing_everything(mock_exists, mock_env_get):
+def test_load_config_missing_everything(mock_exists: MagicMock, mock_env_get: MagicMock) -> None:
     mock_exists.return_value = False
     mock_env_get.return_value = None
 
@@ -17,10 +18,12 @@ def test_load_config_missing_everything(mock_exists, mock_env_get):
 
 @patch('os.environ.get')
 @patch('os.path.exists')
-def test_load_config_missing_required_param(mock_exists, mock_env_get):
+def test_load_config_missing_required_param(
+    mock_exists: MagicMock, mock_env_get: MagicMock
+) -> None:
     mock_exists.return_value = False
 
-    def fake_env_get(key, default=None):
+    def fake_env_get(key: str, default: Any = None) -> Any:
         if key == 'API_KEY':
             return 'fake-key'
         return None
@@ -35,10 +38,10 @@ def test_load_config_missing_required_param(mock_exists, mock_env_get):
 
 @patch('os.path.exists')
 @patch('os.environ.get')
-def test_load_config_success(mock_env_get, mock_exists):
+def test_load_config_success(mock_env_get: MagicMock, mock_exists: MagicMock) -> None:
     mock_exists.return_value = False
 
-    def fake_env_get(key, default=None):
+    def fake_env_get(key: str, default: Any = None) -> Any:
         params = {
             'API_KEY': '123',
             'API_HOST': 'http://localhost',
@@ -62,7 +65,9 @@ def test_load_config_success(mock_env_get, mock_exists):
 @patch('builtins.open')
 @patch('yaml.safe_load')
 @patch('os.environ.get')
-def test_load_config_with_yaml(mock_env_get, mock_yaml_load, mock_open, mock_exists):
+def test_load_config_with_yaml(
+    mock_env_get: MagicMock, mock_yaml_load: MagicMock, mock_open: MagicMock, mock_exists: MagicMock
+) -> None:
     mock_exists.return_value = True
 
     mock_yaml_load.return_value = {
