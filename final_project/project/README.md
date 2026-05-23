@@ -47,6 +47,11 @@
    system_prompt: "You are a helpful Python developer assistant."
    ```
 
+   *Или передайте настройки при запуске приложения:*
+   ```bash
+   API_KEY="your_api" API_HOST="http://localhost" MODEL="gpt-3.5-turbo" LIMIT_MESSAGE=10 LIMIT_CHARS=4000 TEMPERATURE=0.7 python src/main.py
+   ```
+
 4. **Запустите приложение:**
    ```bash
    python src/main.py
